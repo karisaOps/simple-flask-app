@@ -1,0 +1,45 @@
+# docker-compose.yml
+services:
+  flask-app:
+    build: . # Build the image from a Dockerfile in the current directory
+    ports:
+      - "8000:5000" # Map host port 8000 to container port 5000 (where Flask runs)
+    environment:
+      REDIS_HOST: cache
+      DATABASE_HOST: db
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    depends_on: # Define service dependencies
+      - cache
+      - db
+    networks: # Specify which network the service belongs to
+      - app-network
+
+  cache:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes: # Mount volumes for data persistence
+      - redis-data:/data # Mount a named volume for persistence
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge # Use the default bridge network driver
+
+volumes:
+  redis-data:
+  db-data:
